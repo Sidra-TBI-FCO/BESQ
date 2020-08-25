@@ -13,10 +13,10 @@ ipak(required.packages)
 ibiopak(required.bioconductor.packages)
 
 # Set Parameters                                                                                            # "HML_classification" or "k3" or "k4" or "k5"
-Surv_cutoff_years = 10
+Surv_cutoff_years = 5
 Outcome = "OS" # "DSS" "OS"
 Ethnicity_variable = "Assigned_Ethnicity_simplified" #"Ethnicity_reported_simple"
-cbPalette = c("lightblue", "orange")
+cbPalette = c("#FF00FF", "#40E0D0")
 IMS_group = "IMS_Mathews" # "IMS", "IMS_Mathews"
 IMS = "BasalMyo"
 classification = "binary" #"tertiles" # "binary"
@@ -141,6 +141,9 @@ for (i in 1:N.pathways){
   
   results[which(results$Pathway == Pathway),2:5] = c(PLOT_HR, PLOT_P, PLOT_CI1, PLOT_CI2)
   
+  logrank_test(Surv(Time, Status) ~ Group, data = TS.Surv)
+  summary(mHR)
+  
   # plots
   png(paste0("./Figures/Kaplan_meiers/C52.1_survival_by_pathway_category/Sept_2019_", Ethnicity_variable,"_", Ethnicity, "_", Pathway,"_", classification, "_", Outcome, "_Kaplan_Meijer_by_cluster.png"),
       res=600, height=3,width=6,unit="in")                                                                                           # set filename
@@ -158,6 +161,33 @@ for (i in 1:N.pathways){
   #PLOT_CI2 = PLOT_CI2)
   dev.off()
   
+  
+  plot = ggsurvplot(mfit,
+                    data = TS.Surv,
+                    censor = TRUE,
+                    risk.table = TRUE,
+                    tables.y.text.col = FALSE,
+                    tables.y.text = FALSE,
+                    tables.height = 0.3,
+                    tables.theme = theme_cleantable(),
+                    #tables.col = "strata",
+                    risk.table.pos = "out",
+                    legend = "none",
+                    ylab = "",
+                    xlab = "Time in months",
+                    fontsize = 4.5,
+                    font.x = 18,
+                    font.tickslab = 18,
+                    censor.shape = 3,
+                    censor.size = 1.5,
+                    #pval = TRUE
+                    palette = cbPalette
+  )
+  
+  png(paste0("./Figures/Kaplan_meiers/C52.1_survival_by_pathway_category/Aug_2020_", Ethnicity_variable,"_", Ethnicity, "_", Pathway,"_", classification, "_", Outcome, "_Kaplan_Meijer_by_cluster.png"),
+      res=600, height=3.8,width=4.7,unit="in")
+  print(plot)
+  dev.off()
   
 }
 

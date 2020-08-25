@@ -11,7 +11,7 @@ required.bioconductor.packages = c("GSVA","heatmap3", "gclus")
 ibiopak(required.bioconductor.packages)
 
 # Set parameters
-gene_list = "Trajanoski_ORIG"
+gene_list = "Selected.pathways"
 
 # Load data
 load("../tools/ICR_genes.RData")
@@ -21,6 +21,9 @@ load("../tools/immune.gene.lists.v3.Rdata")
 
 Selected.pathways[[55]] = ICR_genes
 names(Selected.pathways)[55] = "ICR genes"
+
+Selected.pathways[[56]] = c("ERBB2", "ERBB3", "ERBB4")
+names(Selected.pathways)[56] = "ERBB2, ERBB3, and ERBB4"
 
 RNAseq_log2 = log(filtered.norm.RNAseqData +1, 2)
 Expression.data = RNAseq_log2
@@ -33,4 +36,4 @@ unavailable_genes_RNAseq = unlist(Gene.list)[-which(unlist(Gene.list) %in% rowna
 ES = gsva(Expression.data,Gene.list,method="ssgsea")
 
 dir.create("./Analysis/ssGSEA_scores", showWarnings = FALSE)
-save(file = paste0("./Analysis/ssGSEA_scores/", gene_list, "_ES_scores.Rdata"), ES)
+save(file = paste0("./Analysis/ssGSEA_scores/v2_", gene_list, "_ES_scores.Rdata"), ES)

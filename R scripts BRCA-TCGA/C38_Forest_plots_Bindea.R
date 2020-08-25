@@ -9,7 +9,7 @@ ipak(required.packages)
 
 # Set parameters
 Outcome = "OS"
-Ethnicity = "All"  # "All", "White", "Black"
+Ethnicity = "Black"  # "All", "White", "Black"
 IMS = "All" # "BasalMyo"
 
 # Load
@@ -17,6 +17,8 @@ load(paste0("./Analysis/C37_Coxph_Bindea/Coxph_table_", IMS, "_", Ethnicity, ".R
 
 HR.table = results[-which(results$Cell_types == "Tgd"),]
 HR.table = HR.table[-which(HR.table$Cell_types == "Mast cells"),]
+HR.table$FDR = p.adjust(p = HR.table$p_value,method = "fdr",n = nrow(HR.table))
+
 
 n.cells = nrow(HR.table)
 x = n.cells + 2
@@ -47,17 +49,19 @@ HR.matrix = HR.matrix[,-c(1)]
 mode(HR.matrix) = "numeric"
 
 HR.table$p_value = signif(HR.table$p_value, 2)
+HR.table$FDR = signif(HR.table$FDR, 2)
 HR.table$HR = signif(HR.table$HR, 3)
 tabletext<-cbind(
   c("Cell", as.character(HR.table$Cell_types)[c(1:n.cells)]),
   c("p-value", HR.table$p_value[c(1:n.cells)]),
+  c("FDR", HR.table$FDR[c(1:n.cells)]),
   c("HR",      HR.table$HR[c(1:n.cells)]))
 
 
 dir.create("./Figures/C38_Forest_plot_Bindea", showWarnings = FALSE)
-pdf(file = paste0("./Figures/C38_Forest_plot_Bindea/C38_new_Forest_plot_Bindea",
+pdf(file = paste0("./Figures/C38_Forest_plot_Bindea/C38_Aug_2020_Forest_plot_Bindea",
                   IMS, "_", Ethnicity,".pdf"),
-    height = 5, width = 4)
+    height = 5, width = 4.5)
 
 forestplot(mean = HR.matrix[,"HR"],
            lower = HR.matrix[,"CI_lower"],

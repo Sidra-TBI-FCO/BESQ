@@ -36,6 +36,13 @@ plot = ggplot(df_plot, aes(x = Ethnicity, y = variable_of_interest)) +
   scale_color_manual(values = c("#FF7E00", "#066C3C")) +
   theme_bw() +
   facet_grid(.~IMS_Mathews) +
+  theme(strip.background = element_rect(colour="black", fill=NA),
+        axis.text.x = element_blank(),
+        strip.text = element_text(colour = "black", size = 8),
+        axis.text.y = element_text(colour = "black", size = 11),
+        axis.title.y = element_text(colour = "black", size = 13),
+        legend.position = "none") +
+  xlab("") +
   stat_compare_means(comparisons = my_comparisons, method = "t.test")
 
 png(paste0("./Figures/C_20_ESTIMATE/", variable_of_interest, "_White_vs_Black.png"), res = 600, height = 4, width = 8, units = "in")

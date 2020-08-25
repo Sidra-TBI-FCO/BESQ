@@ -4,9 +4,9 @@ rm(list=ls())
 setwd("~/Dropbox (TBI-Lab)/NNN-BRCA/RNAseq-TCGA_BRCA")                                                                   # Setwd to location were output files have to be saved.
 
 source("../tools/ipak.function.R")
-source("../tools/ggkm_C12.R")
+source("../tools/ggkm_July_2019.R")
 
-required.packages = c("survival","reshape","ggplot2","plyr","Rcpp","colorspace","texreg", "Hmisc")
+required.packages = c("survival","reshape","ggplot2","plyr","Rcpp","colorspace","texreg", "Hmisc", "survminer")
 required.bioconductor.packages = "survival"
 ipak(required.packages)
 ibiopak(required.bioconductor.packages)
@@ -15,12 +15,11 @@ ibiopak(required.bioconductor.packages)
 Surv_cutoff_years = 10
 Outcome = "OS" # "DSS" "OS"
 Ethnicity_variable = "Assigned_Ethnicity_simplified" #"Ethnicity_reported_simple"
-cbPalette = c("lightblue", "orange")
+cbPalette = c("#FF00FF", "#40E0D0")
 IMS_group = "IMS_Mathews" # "IMS", "IMS_Mathews"
 IMS = "BasalMyo"
 classification = "binary" #"tertiles" # "binary"
-Ethnicity = "White" # "Black"
-only_ICR_Medium_and_Low = "only_ICR_Medium_and_Low"
+Ethnicity = "Black" # "Black" "White"
 
 # Load data
 #load(paste0(code_path, "Datalists/ICR_genes.RData")) 
@@ -32,16 +31,12 @@ load("./Analysis/ICR data/TCGA_BRCA_table_cluster_assignment.RData")
 # Create folders
 dir.create("./Analysis/",showWarnings = FALSE)                                                                        # Create folder to save processed data (by Assembler module B)
 dir.create("./Figures/Kaplan_meiers", showWarnings = FALSE)
-dir.create("./Figures/Kaplan_meiers/C53.1_survival_by_pathway_category", showWarnings = FALSE)
+dir.create("./Figures/Kaplan_meiers/C52_survival_by_bindea_category", showWarnings = FALSE)
 
 max_splits$Feature = gsub("_", " ", max_splits$Feature)
-
 rownames(ES) = gsub("\\/", " ", rownames(ES))
 # Subset Survival data to only get BasalMyo and the above specified ethnicity
 dim(Clinical_data_ann)
-if(only_ICR_Medium_and_Low == "only_ICR_Medium_and_Low"){
-  Clinical_data_ann = Clinical_data_ann[which(Clinical_data_ann$HML.ICR.Cluster %in% c("ICR Medium", "ICR Low")),]
-}
 Survival_data_1 = Clinical_data_ann
 if(Ethnicity_variable == "Assigned_Ethnicity_simplified"){
   Survival_data_1 = Survival_data_1[-which(Survival_data_1[, Ethnicity_variable] %in% c("Asian", "Unclear")),]
@@ -60,12 +55,11 @@ if(Ethnicity == "All"){}else{
 ## Survival data results are stored in dataframe "results"
 
 pathways = max_splits$Feature
-pathways = c("Th2 cells", "TReg", "DC", "B cells")
 N.pathways = length(pathways)
 
 results = data.frame(Pathway = pathways, HR = NA, P = NA, CI_Lower = NA, CI_Higher =NA)
 
-i=3
+i=4
 for (i in 1:N.pathways){
   Pathway = pathways[i]
   plot_df = data.frame(Patient = Survival_data$bcr_patient_barcode,
@@ -78,8 +72,8 @@ for (i in 1:N.pathways){
   }else{
     plot_df$Pathway_score = ES[Pathway,][match(plot_df$Patient, substring(colnames(ES), 1, 12))]
   }
-  #cutoff = max_splits$Bound[which(max_splits$Feature == Pathway)]
-  cutoff = median(plot_df$Pathway_score)
+  #cutoff = median(plot_df$Pathway_score)
+  cutoff = max_splits$Bound[which(max_splits$Feature == Pathway)]
   plot_df$Pathway_category[which(plot_df$Pathway_score < cutoff)] = "Pathway Low"
   plot_df$Pathway_category[which(plot_df$Pathway_score >= cutoff)] = "Pathway High"
   plot_df$OS = as.character(plot_df$OS)
@@ -139,24 +133,51 @@ for (i in 1:N.pathways){
   
   results[which(results$Pathway == Pathway),2:5] = c(PLOT_HR, PLOT_P, PLOT_CI1, PLOT_CI2)
   
-  # plots
-  png(paste0("./Figures/Kaplan_meiers/C53.1_survival_by_pathway_category/", only_ICR_Medium_and_Low, "_Median_Oct_2019_", Ethnicity_variable,"_", Ethnicity, "_", Pathway,"_", classification, "_", Outcome, "_Kaplan_Meijer_by_cluster.png"),
-      res=600, height=3,width=6,unit="in")                                                                                           # set filename
-  ggkm(mfit,
-       timeby=12,
-       ystratalabs = levels(TS.Surv[,"Group"]),
-       ystrataname = NULL,
-       main= paste0(IMS, " ", Pathway, " with cutoff ", round(cutoff, 5) ," in ", Ethnicity),
-       xlabs = "Time in months",
-       Title_size = 18,
-       palette = c("#FF00FF", "#40E0D0"),
-       legend = "none")
-       #PLOT_HR = PLOT_HR,
-       #PLOT_P = PLOT_P,
-       #PLOT_CI1 = PLOT_CI1,
-       #PLOT_CI2 = PLOT_CI2)
-  dev.off()
+  logrank_test(Surv(Time, Status) ~ Group, data = TS.Surv)
+  summary(mHR)
   
+  # plots
+  #png(paste0("./Figures/Kaplan_meiers/C52_survival_by_bindea_category/New_Oct_2019_", Ethnicity_variable,"_", Ethnicity, "_", Pathway,"_", classification, "_", Outcome, "_Kaplan_Meijer_by_cluster.png"),
+   #   res=600, height=6,width=8,unit="in")                                                                                           # set filename
+  #ggkm(mfit,
+   #    timeby=12,
+    #   ystratalabs = levels(TS.Surv[,"Group"]),
+     #  ystrataname = NULL,
+      # main= paste0(IMS, " ", Pathway, " with cutoff ", round(cutoff, 5) ," in ", Ethnicity),
+    #   xlabs = "Time in months",
+     #  Title_size = 18,
+      # palette = c("#FF00FF", "#40E0D0"),
+      # legend = "none")
+  #PLOT_HR = PLOT_HR,
+  #PLOT_P = PLOT_P,
+  #PLOT_CI1 = PLOT_CI1,
+  #PLOT_CI2 = PLOT_CI2)
+  #dev.off()
+  plot = ggsurvplot(mfit,
+                    data = TS.Surv,
+                    censor = TRUE,
+                    risk.table = TRUE,
+                    tables.y.text.col = FALSE,
+                    tables.y.text = FALSE,
+                    tables.height = 0.3,
+                    tables.theme = theme_cleantable(),
+                    #tables.col = "strata",
+                    risk.table.pos = "out",
+                    legend = "none",
+                    ylab = "",
+                    xlab = "Time in months",
+                    fontsize = 4.5,
+                    font.x = 18,
+                    font.tickslab = 18,
+                    censor.shape = 3,
+                    censor.size = 0.9,
+                    #pval = TRUE
+                    palette = cbPalette
+  )
+  png(paste0("./Figures/Kaplan_meiers/C52_survival_by_bindea_category/Aug_2020_", Ethnicity_variable,"_", Ethnicity, "_", Pathway,"_", classification, "_", Outcome, "_Kaplan_Meijer_by_cluster.png"),
+      res=600, height=3.8,width=4.2,unit="in")
+  print(plot)
+  dev.off()
   
 }
 #dir.create("Analysis/C51_results_ggkm_optimal_cutoffs", showWarnings = FALSE)

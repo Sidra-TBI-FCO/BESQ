@@ -8,7 +8,7 @@ source("../tools/ipak.function.R")
 ipak(c("ggplot2", "ggpubr", "dplyr"))
 
 # Set parameters
-Gene_set = "Bindea_ORIG" #"Bindea_ORIG"  #"Selected_pathways"
+Gene_set = "Selected_pathways" #"Bindea_ORIG"  #"Selected_pathways"
 
 # Load data
 load(paste0("./Analysis/ssGSEA_scores/", Gene_set, "_ES_scores.Rdata"))
